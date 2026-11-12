@@ -1,0 +1,22 @@
+ORBE QUANT
+
+Sistema quantitativo de análise esportiva.
+
+Módulos
+
+- ORBE FOOTBALL — análise estatística de futebol.
+- ORBE BASKET — análise estatística de basquete.
+
+Objetivo
+
+Identificar oportunidades estatísticas com base em dados históricos, probabilidades, odds justas e valor esperado (EV+).
+
+Princípios
+
+- Não inventar dados.
+- Não gerar palpites sem validação estatística.
+- Separar futebol e basquete.
+- Registrar resultados e medir desempenho.
+- Priorizar ferramentas gratuitas.
+
+Versão: 0.1 — Estrutura inicial.
