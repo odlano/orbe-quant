@@ -1,0 +1,55 @@
+
+import requests
+import json
+from pathlib import Path
+from datetime import datetime, timezone
+
+API_KEY = "123"
+BASE_URL = f"https://www.thesportsdb.com/api/v1/json/{API_KEY}"
+
+def importar_ligas_futebol():
+    url = f"{BASE_URL}/search_all_leagues.php"
+    parametros = {"s": "Soccer"}
+
+    resposta = requests.get(
+        url,
+        params=parametros,
+        timeout=30
+    )
+
+    resposta.raise_for_status()
+    dados = resposta.json()
+
+    ligas = dados.get("leagues") or []
+
+    resultado = {
+        "fonte": "TheSportsDB",
+        "esporte": "Futebol",
+        "data_importacao": datetime.now(
+            timezone.utc
+        ).isoformat(),
+        "total_ligas": len(ligas),
+        "ligas": ligas
+    }
+
+    pasta = Path("dados")
+    pasta.mkdir(exist_ok=True)
+
+    arquivo = pasta / "ligas_futebol.json"
+
+    with open(arquivo, "w", encoding="utf-8") as f:
+        json.dump(
+            resultado,
+            f,
+            ensure_ascii=False,
+            indent=4
+        )
+
+    print(f"Ligas importadas: {len(ligas)}")
+    print(f"Arquivo salvo: {arquivo}")
+
+    return resultado
+
+
+if __name__ == "__main__":
+    importar_ligas_futebol()
