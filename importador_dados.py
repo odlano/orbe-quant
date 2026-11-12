@@ -1,75 +1,31 @@
 
-import csv
-from pathlib import Path
 
+import requests
 
-def importar_csv(caminho, esporte):
-    esporte = esporte.lower()
+API_KEY = "123"
+BASE_URL = f"https://www.thesportsdb.com/api/v1/json/{API_KEY}"
 
-    if esporte not in ["futebol", "basquete"]:
-        return {"erro": "Esporte não suportado"}
+def importar_ligas_futebol():
+    url = f"{BASE_URL}/search_all_leagues.php"
+    parametros = {"s": "Soccer"}
 
-    caminho = Path(caminho)
+    resposta = requests.get(url, params=parametros, timeout=20)
+    resposta.raise_for_status()
 
-    if not caminho.exists():
-        return {"erro": "Arquivo não encontrado"}
+    dados = resposta.json()
+    ligas = dados.get("leagues") or []
 
-    campos = (
-        ["equipe", "data", "pontos_feitos", "pontos_sofridos"]
-        if esporte == "basquete"
-        else ["equipe", "data", "gols_marcados", "gols_sofridos"]
-    )
+    print(f"Total de ligas encontradas: {len(ligas)}")
 
-    registros = []
-    erros = []
+    for liga in ligas:
+        print({
+            "nome": liga.get("strLeague"),
+            "esporte": liga.get("strSport"),
+            "pais": liga.get("strCountry")
+        })
 
-    try:
-        with open(caminho, "r", encoding="utf-8-sig") as arquivo:
-            leitor = csv.DictReader(arquivo)
-
-            if not leitor.fieldnames or not all(
-                campo in leitor.fieldnames for campo in campos
-            ):
-                return {"erro": "Colunas obrigatórias ausentes"}
-
-            for numero, linha in enumerate(leitor, start=2):
-                try:
-                    equipe = linha["equipe"].strip()
-                    data = linha["data"].strip()
-
-                    if not equipe or not data:
-                        raise ValueError("Equipe ou data ausente")
-
-                    feitos = int(linha[campos[2]])
-                    sofridos = int(linha[campos[3]])
-
-                    if feitos < 0 or sofridos < 0:
-                        raise ValueError("Estatística negativa")
-
-                    registros.append({
-                        "equipe": equipe,
-                        "data": data,
-                        campos[2]: feitos,
-                        campos[3]: sofridos
-                    })
-
-                except (ValueError, TypeError):
-                    erros.append({
-                        "linha": numero,
-                        "motivo": "Dados inválidos"
-                    })
-
-    except OSError:
-        return {"erro": "Não foi possível ler o arquivo"}
-
-    return {
-        "esporte": esporte,
-        "registros_importados": len(registros),
-        "erros": erros,
-        "dados": registros
-    }
+    return ligas
 
 
 if __name__ == "__main__":
-    print("ORBE QUANT - IMPORTADOR")
-    print("Módulo pronto para receber arquivos CSV.")
+    importar_ligas_futebol()
