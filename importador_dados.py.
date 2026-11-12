@@ -1,55 +1,33 @@
 
-import requests
-import json
-from pathlib import Path
-from datetime import datetime, timezone
 
-API_KEY = "123"
-BASE_URL = f"https://www.thesportsdb.com/api/v1/json/{API_KEY}"
+name: ORBE QUANT - Importação de Dados
 
-def importar_ligas_futebol():
-    url = f"{BASE_URL}/search_all_leagues.php"
-    parametros = {"s": "Soccer"}
+on:
+  workflow_dispatch:
 
-    resposta = requests.get(
-        url,
-        params=parametros,
-        timeout=30
-    )
+jobs:
+  importar:
+    runs-on: ubuntu-latest
 
-    resposta.raise_for_status()
-    dados = resposta.json()
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
 
-    ligas = dados.get("leagues") or []
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    resultado = {
-        "fonte": "TheSportsDB",
-        "esporte": "Futebol",
-        "data_importacao": datetime.now(
-            timezone.utc
-        ).isoformat(),
-        "total_ligas": len(ligas),
-        "ligas": ligas
-    }
+      - name: Instalar bibliotecas
+        run: pip install requests
 
-    pasta = Path("dados")
-    pasta.mkdir(exist_ok=True)
+      - name: Importar dados esportivos
+        run: python importador_dados.py
 
-    arquivo = pasta / "ligas_futebol.json"
-
-    with open(arquivo, "w", encoding="utf-8") as f:
-        json.dump(
-            resultado,
-            f,
-            ensure_ascii=False,
-            indent=4
-        )
-
-    print(f"Ligas importadas: {len(ligas)}")
-    print(f"Arquivo salvo: {arquivo}")
-
-    return resultado
-
-
-if __name__ == "__main__":
-    importar_ligas_futebol()
+      - name: Salvar dados importados
+        uses: actions/upload-artifact@v4
+        with:
+          name: dados-orbe-quant
+          path: dados/ligas_futebol.json
+          if-no-files-found: error
+          retention-days: 7
